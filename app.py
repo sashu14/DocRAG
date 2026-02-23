@@ -115,8 +115,11 @@ st.markdown(
 )
 
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
-# Load API key silently from environment
-api_key = os.getenv("GROQ_API_KEY", "")
+# Load API key — Streamlit Cloud secrets first, then local .env
+try:
+    api_key = st.secrets["GROQ_API_KEY"]
+except Exception:
+    api_key = os.getenv("GROQ_API_KEY", "")
 
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
