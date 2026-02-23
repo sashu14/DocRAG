@@ -1,30 +1,44 @@
-# 📊 DocRAG · Finance
+# 🤖 DOCRAG — Document Based RAG Agent
 
-A **Retrieval-Augmented Generation (RAG)** app for financial documents, powered by **Groq** (`llama-3.3-70b-versatile`) and **FAISS** vector search.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://sashu14-docrag-app-i3gf29.streamlit.app/)
 
-## Pipeline
+> **Live Demo → [sashu14-docrag-app-i3gf29.streamlit.app](https://sashu14-docrag-app-i3gf29.streamlit.app/)**
+
+A **Retrieval-Augmented Generation (RAG)** app for financial documents — answers questions **exclusively from your uploaded PDF** with citations, quotes, and confidence scores. Powered by **Groq** (`llama-3.3-70b-versatile`) and **FAISS** vector search.
+
+---
+
+## ⚙️ Pipeline
 
 ```
 PDF Upload → Extract (PyMuPDF) → Chunk (500 tok / 50 overlap)
-         → Embed (MiniLM-L6)  → FAISS cosine search
-         → Inject top-5 into Groq prompt → Cited answer
+          → Embed (MiniLM-L6)  → FAISS cosine search
+          → Inject top-5 chunks → Groq LLM → Cited answer
 ```
 
-## Quick Start
+## 📋 Output Format
+
+```
+Answer:     [grounded answer — only from the document]
+Source:     [Page X / Section Y]
+Quote:      "[exact text from document]"
+Confidence: XX%
+```
+
+## 🚀 Run Locally
 
 ```bash
-# 1. Install dependencies
+git clone https://github.com/sashu14/DocRAG.git
+cd DocRAG
 pip install -r requirements.txt
 
-# 2. Set your Groq API key
-cp .env.example .env
-# Edit .env and set GROQ_API_KEY=gsk_...
+# Add your Groq API key
+echo 'GROQ_API_KEY=gsk_...' > .env
 
-# 3. Run
 streamlit run app.py
 ```
 
-## Features
+## ✨ Features
 
 | Feature | Detail |
 |---|---|
@@ -36,17 +50,6 @@ streamlit run app.py
 | Citations | Page + Section + direct quote |
 | Confidence | 0–100% per answer |
 
-## Output Format
+## 🔑 API Key
 
-```
-Answer:     [grounded answer]
-Source:     [Page X / Section Y]
-Quote:      "[exact text from document]"
-Confidence: XX%
-```
-
-## Notes
-
-- Model never answers from general knowledge — only the uploaded PDF.
-- If an answer isn't in the document it says so explicitly.
-- API key: get one free at [console.groq.com](https://console.groq.com)
+Get a **free** Groq API key at [console.groq.com](https://console.groq.com)
