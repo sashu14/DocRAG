@@ -115,7 +115,7 @@ st.markdown(
 )
 
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
-# Load API key — Streamlit Cloud secrets first, then local .env
+# Load API key — Streamlit Cloud secrets first, then local .env, then UI input
 try:
     api_key = st.secrets["GROQ_API_KEY"]
 except Exception:
@@ -124,8 +124,23 @@ except Exception:
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
     st.markdown("---")
+
+    # API Key — show input field if not already set from env/secrets
+    if not api_key:
+        st.markdown("### 🔑 Groq API Key")
+        api_key = st.text_input(
+            "Enter your Groq API key",
+            type="password",
+            placeholder="gsk_...",
+            label_visibility="collapsed",
+            help="Get a free key at https://console.groq.com",
+        )
+        if not api_key:
+            st.warning("⚠️ Paste your Groq API key above to enable Q&A.")
+        st.markdown("---")
+
     st.markdown("### 📄 Upload Document")
-    uploaded = st.file_uploader("Finance PDF", type=["pdf"], label_visibility="collapsed")
+    uploaded = st.file_uploader("Upload PDF", type=["pdf"], label_visibility="collapsed")
 
     st.markdown("---")
     st.markdown(
@@ -185,7 +200,7 @@ for entry in st.session_state.history:
     with st.chat_message("user"):
         st.write(entry["question"])
     with st.chat_message("assistant"):
-        st.markdown(f'<div class="answer-box">{entry["answer"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="answer-box">{entry["answer"].replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
 
         with st.expander("📎 Retrieved Source Chunks"):
             for i, r in enumerate(entry["retrieved"], 1):
@@ -217,7 +232,9 @@ if not chunks and not uploaded:
 if question:
     if not chunks:
         st.error("Please upload a PDF first.")
-    else:
+    elif not api_key:
+        st.error("❌ Please enter your Groq API key in the sidebar to get answers.")
+    elif api_key:
         with st.chat_message("user"):
             st.write(question)
 
@@ -233,7 +250,7 @@ if question:
                     answer    = result["answer"]
                     retrieved = result["retrieved"]
 
-                    st.markdown(f'<div class="answer-box">{answer}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="answer-box">{answer.replace(chr(10), "<br>")}</div>', unsafe_allow_html=True)
 
                     with st.expander("📎 Retrieved Source Chunks"):
                         for i, r in enumerate(retrieved, 1):

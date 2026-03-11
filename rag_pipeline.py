@@ -17,11 +17,11 @@ from typing import Optional
 CHUNK_SIZE    = 500   # tokens (approx 4 chars per token → ~2000 chars)
 CHUNK_OVERLAP = 50    # token overlap
 CHARS_PER_TOK = 4
-TOP_K         = 5     # number of chunks to retrieve
+TOP_K         = 8     # number of chunks to retrieve
 
 GROQ_MODEL    = "llama-3.3-70b-versatile"
-TEMPERATURE   = 0.2
-MAX_TOKENS    = 1024
+TEMPERATURE   = 0.1
+MAX_TOKENS    = 2048
 
 EMBED_MODEL   = "all-MiniLM-L6-v2"   # small, fast, free
 
@@ -136,22 +136,21 @@ def retrieve(query: str, chunks: list[Chunk], index: faiss.Index, top_k: int = T
 
 # ─── Groq Generation ─────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """\
-You are DocRAG — a document-grounded financial assistant.
+You are DocRAG — an intelligent assistant that answers questions based on document content.
 
-Rules:
-- Answer EXCLUSIVELY from the retrieved document chunks provided below.
-- NEVER use general knowledge.
-- If the answer is not in the chunks, say exactly:
-  "This information was not found in the uploaded document."
-- Always cite the source like: [Page 4, Section: Risk Factors]
-- Quote key phrases directly from the document when relevant.
-- Give a confidence score (0–100%) based on how clearly the chunk answers.
-- If multiple chunks are relevant, synthesize them and note all sources.
+Instructions:
+- Use the retrieved document chunks below to answer the user's question as thoroughly as possible.
+- Synthesize information across multiple chunks if needed to give a complete answer.
+- Always cite the specific page(s) you are drawing from.
+- If you find relevant information, provide a detailed, clear answer — do NOT refuse to answer if the information is present.
+- Quote key phrases from the document when they directly answer the question.
+- Only say "This information was not found in the uploaded document." if the answer is genuinely absent from ALL retrieved chunks.
+- Give a confidence score (0–100%) reflecting how well the chunks answer the question.
 
-Output format (strict):
-Answer: [your grounded answer]
-Source: [Page X / Section Y]
-Quote: "[exact text from document]"
+Output format:
+Answer: [detailed answer synthesized from the document chunks]
+Source: [Page X, Page Y, etc.]
+Quote: "[most relevant quote from the document]"
 Confidence: XX%
 """
 
@@ -167,6 +166,8 @@ def build_user_prompt(question: str, retrieved: list[dict]) -> str:
 
 
 def ask_groq(question: str, retrieved: list[dict], api_key: str) -> str:
+    if not api_key or not api_key.strip():
+        raise ValueError("Groq API key is missing. Please enter your key in the sidebar (get one free at https://console.groq.com).")
     client = Groq(api_key=api_key)
     response = client.chat.completions.create(
         model=GROQ_MODEL,
